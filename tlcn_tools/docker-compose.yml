@@ -36,6 +36,8 @@ services:
     - "3306:3306"
     volumes:
     - ./mysql/db-data:/var/lib/mysql
+    - ./mysql/files/data_files:/var/lib/mysql-files/data_files
+    - ./mysql/files/scripts:/var/lib/mysql-files/scripts
     networks:
       - tlcn-net
 

@@ -1,0 +1,8 @@
+Vehicle Type,Category,Capacity,Segment
+Auto,Economy,3,Low-cost
+Bike,Economy,1,Quick ride
+eBike,Economy,1,Eco-friendly
+Go Mini,Economy,4,Compact
+Go Sedan,Standard,4,Comfort
+Premier Sedan,Premium,4,Luxury
+Uber XL,Premium,6,Group ride
