@@ -79,7 +79,7 @@ dbt docs serve --host 0.0.0.0
 ## Một số lưu ý
 
 - ...
-- **Airflow**: Nếu sử dụng Airflow để orchestrate ETL, cấu hình DAGs trong thư mục `airflow/dags` và đảm bảo các connection tới Spark/HDFS đã được thiết lập.
+- **Airflow**: Nếu sử dụng Airflow để orchestrate ETL, cấu hình DAGs trong thư mục `airflow/dags` và đảm bảo các connection tới MySQL và Postgres đã được thiết lập.
 - **Dừng hệ thống**:
   ```sh
   docker compose -f docker-compose.yml stop
