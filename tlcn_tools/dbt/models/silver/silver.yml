@@ -1,0 +1,238 @@
+version: 2
+
+models:
+  - name: ride_bookings
+    description: "Transformed data of ride booking from bronze layer."
+    columns:
+      - name: date
+        description: "Date when the customer booked the trip."
+        data_tests:
+          - not_null
+          - assert_date_format
+          - relationships:
+              arguments:
+                to: ref('date')
+                field: full_date
+
+      - name: time
+        description: "Time when the customer booked the trip."
+        data_tests:
+          - not_null
+          - assert_time_format
+          - relationships:
+              arguments:
+                to: ref('time')
+                field: time
+
+      - name: booking_id
+        description: "Primary key of ride booking."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: booking_status
+        description: "Status of booking."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('status')
+                field: status_name
+
+      - name: customer_id
+        description: "Id of the customer who booked the trip."
+        data_tests:
+          - not_null
+
+      - name: vehicle_type
+        description: "Type of the vehicle was booked."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('vehicles')
+                field: vehicle_type
+
+      - name: pickup_location
+        description: "Location where the driver will pick the customer up."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('locations')
+                field: location
+
+      - name: drop_location
+        description: "Location where the driver will drop the customer down."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('locations')
+                field: location
+
+      - name: payment_method
+        description: "Payment method which the customer used in booking payment."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('payments')
+                field: payment_method
+
+      - name: booking_key
+        description: "Key generated from booking_id."
+        data_tests:
+          - not_null
+          - unique
+
+  - name: date
+    description: "Transformed data of date from bronze layer."
+    columns:
+      - name: date_key
+        description: "Key generated from full_date."
+        data_tests:
+          - not_null
+          - unique
+      - name: full_date
+        description: "Full date of cleaned data."
+        data_tests:
+          - not_null
+          - unique
+          - assert_date_format
+      - name: year
+        description: "Year of the date."
+        data_tests:
+          - not_null
+      - name: month
+        description: "Month of the date."
+        data_tests:
+          - not_null
+      - name: day
+        description: "Day of the date."
+        data_tests:
+          - not_null
+      - name: quarter
+        description: "Quarter of the date."
+        data_tests:
+          - not_null
+
+  - name: locations
+    description: "Transformed data of locations from bronze layer."
+    columns:
+      - name: location_key
+        description: "Key generated from location."
+        data_tests:
+          - not_null
+          - unique
+      - name: location
+        description: "Location where customers can book with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: city
+        description: "City of the location."
+        data_tests:
+          - not_null
+      - name: zone
+        description: "Zone of the location."
+        data_tests:
+          - not_null
+
+  - name: payments
+    description: "Transformed data of payment methods from bronze layer."
+    columns:
+      - name: payment_key
+        description: "Key generated from payment_method."
+        data_tests:
+          - not_null
+          - unique
+      - name: payment_method
+        description: "Payment method which customers can use with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: category
+        description: "Category of the payment method."
+        data_tests:
+          - not_null
+
+  - name: status
+    description: "Cleaned status data of ride_booking from bronze layer."
+    columns:
+      - name: status_key
+        description: "Key generated from status_name."
+        data_tests:
+          - not_null
+          - unique
+      - name: status_name
+        description: "Status of the booking."
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Cancelled by Customer",
+                    "Cancelled by Driver",
+                    "Completed",
+                    "Incomplete",
+                    "No Driver Found",
+                  ]
+
+  - name: time
+    description: "Transformed data of time from bronze layer."
+    columns:
+      - name: time_key
+        description: "Key generated from time."
+        data_tests:
+          - not_null
+          - unique
+      - name: time
+        description: "Time of cleaned data."
+        data_tests:
+          - not_null
+          - unique
+          - assert_time_format
+      - name: hour
+        description: "Hour of the time."
+        data_tests:
+          - not_null
+      - name: minute
+        description: "Minute of the time."
+        data_tests:
+          - not_null
+      - name: second
+        description: "Second of the time."
+        data_tests:
+          - not_null
+      - name: time_of_day
+        description: "Time of day."
+        data_tests:
+          - not_null
+
+  - name: vehicles
+    description: "Transformed data of vehicles from bronze layer."
+    columns:
+      - name: vehicle_key
+        description: "Key generated from vehicle_type."
+        data_tests:
+          - not_null
+          - unique
+      - name: vehicle_type
+        description: "Vehicle type which customers can book with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: category
+        description: "Category the vehicle type."
+        data_tests:
+          - not_null
+      - name: capacity
+        description: "Capacity of the vehicle type."
+        data_tests:
+          - not_null
+      - name: segment
+        description: "Segment of the vehicle type."
+        data_tests:
+          - not_null

@@ -13,4 +13,12 @@ for DB in "${DATABASES[@]}"; do
   psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     CREATE DATABASE $DB;
 EOSQL
+
+  # If the database is 'warehouse', install pgcrypto extension
+  if [ "$DB" = "warehouse" ]; then
+    echo "Enabling pgcrypto extension for database: $DB"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB" <<-EOSQL
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+EOSQL
+  fi
 done

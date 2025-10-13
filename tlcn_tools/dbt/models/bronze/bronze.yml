@@ -1,0 +1,133 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    database: warehouse
+    tables:
+      - name: ride_bookings
+        description: "Raw data of ride booking synchronized from mysql by airflow."
+        columns:
+          - name: date
+            description: "Date when the customer booked the trip."
+            data_tests:
+              - not_null
+              - assert_date_format
+
+          - name: time
+            description: "Time when the customer booked the trip."
+            data_tests:
+              - not_null
+              - assert_time_format
+
+          - name: booking_id
+            description: "Primary key of ride booking."
+            data_tests:
+              - not_null
+              - unique
+
+          - name: booking_status
+            description: "Status of booking."
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values:
+                      [
+                        "Cancelled by Customer",
+                        "Cancelled by Driver",
+                        "Completed",
+                        "Incomplete",
+                        "No Driver Found",
+                      ]
+
+          - name: customer_id
+            description: "Id of the customer who booked the trip."
+            data_tests:
+              - not_null
+
+          - name: vehicle_type
+            description: "Type of the vehicle was booked."
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze', 'vehicles')
+                    field: vehicle_type
+
+          - name: pickup_location
+            description: "Location where the driver will pick the customer up."
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze', 'locations')
+                    field: location
+
+          - name: drop_location
+            description: "Location where the driver will drop the customer down."
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze', 'locations')
+                    field: location
+
+          - name: payment_method
+            description: "Payment method which the customer used in booking payment."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('bronze', 'payments')
+                    field: payment_method
+
+      - name: locations
+        description: "Raw data of locations synchronized from mysql by airflow."
+        columns:
+          - name: location
+            description: "Location where customers can book with Uber."
+            data_tests:
+              - not_null
+              - unique
+          - name: city
+            description: "City of the location."
+            data_tests:
+              - not_null
+          - name: zone
+            description: "Zone of the location."
+            data_tests:
+              - not_null
+
+      - name: payments
+        description: "Raw data of payment methods synchronized from mysql by airflow."
+        columns:
+          - name: payment_method
+            description: "Payment method which customers can use with Uber."
+            data_tests:
+              - not_null
+              - unique
+          - name: category
+            description: "Category of the payment method."
+            data_tests:
+              - not_null
+
+      - name: vehicles
+        description: "Raw data of vehicles synchronized from mysql by airflow."
+        columns:
+          - name: vehicle_type
+            description: "Vehicle type which customers can book with Uber."
+            data_tests:
+              - not_null
+              - unique
+          - name: category
+            description: "Category the vehicle type."
+            data_tests:
+              - not_null
+          - name: capacity
+            description: "Capacity of the vehicle type."
+            data_tests:
+              - not_null
+          - name: segment
+            description: "Segment of the vehicle type."
+            data_tests:
+              - not_null

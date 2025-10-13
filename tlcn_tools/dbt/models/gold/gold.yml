@@ -1,0 +1,225 @@
+version: 2
+
+models:
+  - name: fact_ride_booking
+    description: "Fact ride booking built from silver layer."
+    columns:
+      - name: booking_key
+        description: "Key generated from booking_id."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: date_key
+        description: "Date key joined from date model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: time_key
+        description: "Time key joined from time model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_time')
+                field: time_key
+
+      - name: pickup_key
+        description: "Pickup location key joined from locations model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: drop_key
+        description: "Drop location key joined from locations model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: vehicle_key
+        description: "Vehicle key joined from vehicles model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_vehicle')
+                field: vehicle_key
+
+      - name: payment_key
+        description: "Payment key joined from payments model."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_payment')
+                field: payment_key
+
+      - name: status_key
+        description: "Status key joined from status model."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_status')
+                field: status_key
+
+  - name: dim_date
+    description: "Dim date built from silver layer."
+    columns:
+      - name: date_key
+        description: "Key generated from full_date."
+        data_tests:
+          - not_null
+          - unique
+      - name: full_date
+        description: "Full date of cleaned data."
+        data_tests:
+          - not_null
+          - unique
+          - assert_date_format
+      - name: year
+        description: "Year of the date."
+        data_tests:
+          - not_null
+      - name: month
+        description: "Month of the date."
+        data_tests:
+          - not_null
+      - name: day
+        description: "Day of the date."
+        data_tests:
+          - not_null
+      - name: quarter
+        description: "Quarter of the date."
+        data_tests:
+          - not_null
+
+  - name: dim_location
+    description: "Dim location build from silver layer."
+    columns:
+      - name: location_key
+        description: "Key generated from location."
+        data_tests:
+          - not_null
+          - unique
+      - name: location
+        description: "Location where customers can book with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: city
+        description: "City of the location."
+        data_tests:
+          - not_null
+      - name: zone
+        description: "Zone of the location."
+        data_tests:
+          - not_null
+
+  - name: dim_payment
+    description: "Dim payment built from silver layer."
+    columns:
+      - name: payment_key
+        description: "Key generated from payment_method."
+        data_tests:
+          - not_null
+          - unique
+      - name: payment_method
+        description: "Payment method which customers can use with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: category
+        description: "Category of the payment method."
+        data_tests:
+          - not_null
+
+  - name: dim_status
+    description: "Dim status built from silver layer."
+    columns:
+      - name: status_key
+        description: "Key generated from status_name."
+        data_tests:
+          - not_null
+          - unique
+      - name: status_name
+        description: "Status of the booking."
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Cancelled by Customer",
+                    "Cancelled by Driver",
+                    "Completed",
+                    "Incomplete",
+                    "No Driver Found",
+                  ]
+
+  - name: dim_time
+    description: "Dim time built from silver layer."
+    columns:
+      - name: time_key
+        description: "Key generated from time."
+        data_tests:
+          - not_null
+          - unique
+      - name: time
+        description: "Time of cleaned data."
+        data_tests:
+          - not_null
+          - unique
+          - assert_time_format
+      - name: hour
+        description: "Hour of the time."
+        data_tests:
+          - not_null
+      - name: minute
+        description: "Minute of the time."
+        data_tests:
+          - not_null
+      - name: second
+        description: "Second of the time."
+        data_tests:
+          - not_null
+      - name: time_of_day
+        description: "Time of day."
+        data_tests:
+          - not_null
+
+  - name: dim_vehicle
+    description: "Dim vehicle built from silver layer."
+    columns:
+      - name: vehicle_key
+        description: "Key generated from vehicle_type."
+        data_tests:
+          - not_null
+          - unique
+      - name: vehicle_type
+        description: "Vehicle type which customers can book with Uber."
+        data_tests:
+          - not_null
+          - unique
+      - name: category
+        description: "Category the vehicle type."
+        data_tests:
+          - not_null
+      - name: capacity
+        description: "Capacity of the vehicle type."
+        data_tests:
+          - not_null
+      - name: segment
+        description: "Segment of the vehicle type."
+        data_tests:
+          - not_null
