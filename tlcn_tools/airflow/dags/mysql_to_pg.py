@@ -4,6 +4,8 @@ from airflow.providers.mysql.hooks.mysql import MySqlHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
 from datetime import datetime
+import pandas as pd
+import numpy as np
 
 # ------------------------------
 # CONFIG
@@ -28,6 +30,9 @@ def transfer_table(table_name: str):
     if table_name == "ride_bookings":
         df["booking_id"] = df["booking_id"].str.replace('"', '', regex=False)
         df["customer_id"] = df["customer_id"].str.replace('"', '', regex=False)
+        # Chuyển cột time về dạng chuỗi nếu là timedelta64
+        if "time" in df.columns and np.issubdtype(df["time"].dtype, np.timedelta64):
+            df["time"] = df["time"].apply(lambda x: str(x).split()[-1] if pd.notnull(x) else None)
 
     # Đẩy dữ liệu sang PostgreSQL
     df.to_sql(

@@ -38,7 +38,7 @@ LOAD DATA INFILE '/var/lib/mysql-files/data_files/ncr_ride_bookings.csv'
 INTO TABLE ride_bookings
 FIELDS TERMINATED BY ',' 
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS
 (
     @date,
@@ -84,4 +84,4 @@ SET
     ride_distance = NULLIF(@ride_distance, ''),
     driver_ratings = NULLIF(@driver_ratings, ''),
     customer_rating = NULLIF(@customer_rating, ''),
-    payment_method = NULLIF(@payment_method, '');
+    payment_method = NULLIF(TRIM(BOTH '\r\n' FROM @payment_method), '');

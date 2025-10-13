@@ -1,12 +1,12 @@
 dbt_project:
+  target: dev
   outputs:
     dev:
-      dbname: "warehouse"
-      host: "postgres"
-      pass: admin
-      port: 5432
-      schema: "gold"
-      threads: 2
       type: postgres
+      host: postgres
+      port: 5432
       user: admin
-  target: dev
+      pass: admin
+      dbname: warehouse
+      schema: gold
+      threads: 2
