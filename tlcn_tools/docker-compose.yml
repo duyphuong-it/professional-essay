@@ -55,9 +55,9 @@ services:
       - ./postgres/init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "admin" ]
-      interval: 10s
-      retries: 5
-      start_period: 5s
+      interval: 30s
+      retries: 20
+      start_period: 10s
     networks:
       - tlcn-net
 
