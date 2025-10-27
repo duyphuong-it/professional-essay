@@ -38,7 +38,7 @@ LOAD DATA INFILE '/var/lib/mysql-files/data_files/ncr_ride_bookings.csv'
 INTO TABLE ride_bookings
 FIELDS TERMINATED BY ',' 
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n'
+LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (
     @date,
