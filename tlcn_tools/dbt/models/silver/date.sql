@@ -1,9 +1,18 @@
-{{ config(materialized='view', schema='silver') }}
+{{ 
+  config(
+    materialized='incremental',
+    incremental_strategy='merge',
+    unique_key='full_date',
+    schema='silver'
+  ) 
+}}
 
 WITH source_date AS (
-    SELECT
-        DISTINCT date AS date
+    SELECT DISTINCT date AS date
     FROM {{ source('bronze', 'ride_bookings') }}
+    {% if is_incremental() %}
+      WHERE date NOT IN (SELECT full_date FROM {{ this }})
+    {% endif %}
 ),
 
 transformed_date AS (

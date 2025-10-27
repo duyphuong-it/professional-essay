@@ -1,63 +1,57 @@
-{{ config(materialized='table', schema='gold') }}
+{{ 
+  config(
+    materialized='incremental',
+    incremental_strategy='merge',
+    unique_key='booking_key',
+    on_schema_change='sync_all_columns',
+    schema='gold'
+  )
+}}
 
-with ride as (
-    select *
-    from {{ ref('ride_bookings') }}
+WITH ride AS (
+    SELECT *
+    FROM {{ ref('ride_bookings') }}
 ),
 
-vehicle as (
-    select
-        vehicle_type,
-        vehicle_key
-    from {{ ref('vehicles') }}
+vehicle AS (
+    SELECT vehicle_type, vehicle_key
+    FROM {{ ref('vehicles') }}
 ),
 
-pickup_location as (
-    select
-        location,
-        location_key as pickup_key
-    from {{ ref('locations') }}
+pickup_location AS (
+    SELECT location, location_key AS pickup_key
+    FROM {{ ref('locations') }}
 ),
 
-drop_location as (
-    select
-        location,
-        location_key as drop_key
-    from {{ ref('locations') }}
+drop_location AS (
+    SELECT location, location_key AS drop_key
+    FROM {{ ref('locations') }}
 ),
 
-payment as (
-    select
-        payment_method,
-        payment_key
-    from {{ ref('payments') }}
+payment AS (
+    SELECT payment_method, payment_key
+    FROM {{ ref('payments') }}
 ),
 
-date_dim as (
-    select
-        full_date,
-        date_key
-    from {{ ref('date') }}
+date_dim AS (
+    SELECT full_date, date_key
+    FROM {{ ref('date') }}
 ),
 
-time_dim as (
-    select
-        time,
-        time_key
-    from {{ ref('time') }}
+time_dim AS (
+    SELECT time, time_key
+    FROM {{ ref('time') }}
 ),
 
-status_dim as (
-    select
-        status_name,
-        status_key
-    from {{ ref('status') }}
+status_dim AS (
+    SELECT status_name, status_key
+    FROM {{ ref('status') }}
 ),
 
-joined as (
-    select
+joined AS (
+    SELECT
         -- surrogate key
-        booking_key,
+        r.booking_key,
 
         -- join dimension keys
         d.date_key,
@@ -69,25 +63,25 @@ joined as (
         s.status_key,
 
         -- fact metrics
-        cust_cancel,
-        cust_cancel_reason,
-        driver_cancel,
-        driver_cancel_reason,
-        avg_vtat,
-        avg_ctat,
-        booking_value,
-        ride_distance,
-        driver_rating,
-        customer_rating
+        r.cust_cancel,
+        r.cust_cancel_reason,
+        r.driver_cancel,
+        r.driver_cancel_reason,
+        r.avg_vtat,
+        r.avg_ctat,
+        r.booking_value,
+        r.ride_distance,
+        r.driver_rating,
+        r.customer_rating
 
-    from ride
-    left join vehicle v on ride.vehicle_type = v.vehicle_type
-    left join pickup_location p on ride.pickup_location = p.location
-    left join drop_location dl on ride.drop_location = dl.location
-    left join payment pay on ride.payment_method = pay.payment_method
-    left join date_dim d on ride.date = d.full_date
-    left join time_dim t on ride.time = t.time
-    left join status_dim s on ride.booking_status = s.status_name
+    FROM ride r
+    LEFT JOIN vehicle v ON r.vehicle_type = v.vehicle_type
+    LEFT JOIN pickup_location p ON r.pickup_location = p.location
+    LEFT JOIN drop_location dl ON r.drop_location = dl.location
+    LEFT JOIN payment pay ON r.payment_method = pay.payment_method
+    LEFT JOIN date_dim d ON r.date = d.full_date
+    LEFT JOIN time_dim t ON r.time = t.time
+    LEFT JOIN status_dim s ON r.booking_status = s.status_name
 )
 
-select * from joined
+SELECT * FROM joined

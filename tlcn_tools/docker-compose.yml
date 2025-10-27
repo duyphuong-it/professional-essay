@@ -178,6 +178,29 @@ services:
         - postgres
       networks:
         - tlcn-net
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    networks:
+      - tlcn-net
+
+  vanna_app:
+    image: duyphuong0026/vanna_app:latest
+    container_name: vanna_app
+    depends_on:
+      - ollama
+      - postgres
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - tlcn-net
 
 networks:
   tlcn-net:

@@ -37,10 +37,8 @@ models:
 
     # Tầng Silver: dữ liệu sạch, chuẩn hóa -> view
     silver:
-      +materialized: view
       +schema: silver
 
     # Tầng Gold: dữ liệu tổng hợp, phục vụ BI -> table
     gold:
-      +materialized: table
       +schema: gold

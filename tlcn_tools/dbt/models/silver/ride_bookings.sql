@@ -1,4 +1,11 @@
-{{ config(materialized='view', schema='silver') }}
+{{ 
+  config(
+    materialized='incremental',
+    unique_key='booking_id',
+    incremental_strategy='merge',
+    schema='silver'
+  ) 
+}}
 
 SELECT
     date,
@@ -24,3 +31,9 @@ SELECT
     payment_method,
     encode(DIGEST(booking_id, 'sha256'), 'hex') AS booking_key
 FROM {{ source('bronze', 'ride_bookings') }}
+
+-- Chỉ load incremental nếu không full refresh
+{% if is_incremental() %}
+WHERE
+  booking_id NOT IN (SELECT booking_id FROM {{ this }})
+{% endif %}
