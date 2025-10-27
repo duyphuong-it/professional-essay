@@ -1,0 +1,3 @@
+vanna
+vanna[chromadb,ollama,mysql,flask,postgres]
+posthog==2.4.2
