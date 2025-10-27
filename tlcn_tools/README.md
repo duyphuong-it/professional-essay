@@ -50,7 +50,7 @@ docker exec -it tlcn-mysql bash
 ```bash
 mysql -u root -p mysql < /var/lib/mysql-files/scripts/create_db.sql
 
-mysql -u root -p mysql < /var/lib/mysql-files/scripts/import_data.sql
+mysql -u root -p uber_ride_bookings < /var/lib/mysql-files/scripts/import_data.sql
 ```
 
 Lưu ý: Mỗi lần chạy lệnh sẽ được hỏi mật khẩu, nhập `root` để xác thực.
