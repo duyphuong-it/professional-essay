@@ -1,34 +1,36 @@
-{{ 
+{{
   config(
     materialized='incremental',
     incremental_strategy='merge',
     unique_key='time',
     schema='silver'
-  ) 
+  )
 }}
 
-WITH source_time AS (
-    SELECT DISTINCT time
-    FROM {{ source('bronze', 'ride_bookings') }} s
+WITH new_times AS (
+    SELECT DISTINCT CAST(b.time AS time) AS time
+    FROM {{ source('bronze', 'ride_bookings') }} b
     {% if is_incremental() %}
-        WHERE CAST(time AS time) NOT IN (SELECT time FROM {{ this }})
+    LEFT JOIN {{ this }} s
+      ON CAST(b.time AS time) = s.time
+    WHERE s.time IS NULL
     {% endif %}
 ),
 
 transformed_time AS (
     SELECT
-        CAST(time AS time) AS time,
-        extract(hour FROM CAST(time AS time)) AS hour,
-        extract(minute FROM CAST(time AS time)) AS minute,
-        extract(second FROM CAST(time AS time)) AS second,
+        time,
+        EXTRACT(HOUR FROM time) AS hour,
+        EXTRACT(MINUTE FROM time) AS minute,
+        EXTRACT(SECOND FROM time) AS second,
         CASE
-            WHEN extract(hour FROM CAST(time AS time)) BETWEEN 5 AND 11 THEN 'Morning'
-            WHEN extract(hour FROM CAST(time AS time)) BETWEEN 12 AND 16 THEN 'Afternoon'
-            WHEN extract(hour FROM CAST(time AS time)) BETWEEN 17 AND 20 THEN 'Evening'
+            WHEN EXTRACT(HOUR FROM time) BETWEEN 5 AND 11 THEN 'Morning'
+            WHEN EXTRACT(HOUR FROM time) BETWEEN 12 AND 16 THEN 'Afternoon'
+            WHEN EXTRACT(HOUR FROM time) BETWEEN 17 AND 20 THEN 'Evening'
             ELSE 'Night'
         END AS time_of_day,
-        encode(digest(CAST(time AS VARCHAR), 'sha256'), 'hex') AS time_key
-    FROM source_time
+        ENCODE(DIGEST(CAST(time AS VARCHAR), 'sha256'), 'hex') AS time_key
+    FROM new_times
 )
 
 SELECT * FROM transformed_time

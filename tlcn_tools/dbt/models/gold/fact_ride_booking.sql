@@ -5,12 +5,15 @@
     unique_key='booking_key',
     on_schema_change='sync_all_columns',
     schema='gold'
-  )
+  ) 
 }}
 
 WITH ride AS (
     SELECT *
     FROM {{ ref('ride_bookings') }}
+    {% if is_incremental() %}
+      WHERE event_timestamp > (SELECT COALESCE(MAX(event_timestamp), '1900-01-01') FROM {{ this }})
+    {% endif %}
 ),
 
 vehicle AS (
@@ -50,10 +53,7 @@ status_dim AS (
 
 joined AS (
     SELECT
-        -- surrogate key
         r.booking_key,
-
-        -- join dimension keys
         d.date_key,
         t.time_key,
         p.pickup_key,
@@ -61,8 +61,6 @@ joined AS (
         v.vehicle_key,
         pay.payment_key,
         s.status_key,
-
-        -- fact metrics
         r.cust_cancel,
         r.cust_cancel_reason,
         r.driver_cancel,
@@ -72,8 +70,8 @@ joined AS (
         r.booking_value,
         r.ride_distance,
         r.driver_rating,
-        r.customer_rating
-
+        r.customer_rating,
+        r.event_timestamp
     FROM ride r
     LEFT JOIN vehicle v ON r.vehicle_type = v.vehicle_type
     LEFT JOIN pickup_location p ON r.pickup_location = p.location

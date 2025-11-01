@@ -30,15 +30,3 @@ clean-targets: # directories to be removed by `dbt clean`
 models:
   +transient: false
   dbt_project:
-    # # Tầng Bronze: dữ liệu gốc -> table
-    # bronze:
-    #   +materialized: table
-    #   +schema: bronze
-
-    # Tầng Silver: dữ liệu sạch, chuẩn hóa -> view
-    silver:
-      +schema: silver
-
-    # Tầng Gold: dữ liệu tổng hợp, phục vụ BI -> table
-    gold:
-      +schema: gold

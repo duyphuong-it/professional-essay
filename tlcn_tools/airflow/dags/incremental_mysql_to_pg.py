@@ -1,5 +1,4 @@
 from airflow import DAG
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.mysql.hooks.mysql import MySqlHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
@@ -33,36 +32,35 @@ def transfer_table(table_name: str):
     # 1️⃣ Lấy timestamp mới nhất đã load trong PostgreSQL
     # ------------------------------
     last_ts = None
-    try:
-        query_last_ts = f"""
-            SELECT MAX(TO_TIMESTAMP(CONCAT(date, ' ', time), 'YYYY-MM-DD HH24:MI:SS')) AS last_ts
-            FROM {SCHEMA}.{table_name};
-        """
-        last_ts_df = pd.read_sql(query_last_ts, pg_engine)
-        last_ts = last_ts_df["last_ts"][0]
-    except Exception:
-        # Bảng chưa tồn tại
-        last_ts = None
+    if table_name == "ride_bookings":
+        try:
+            query_last_ts = f"""
+                SELECT MAX(event_timestamp) AS last_ts
+                FROM {SCHEMA}.{table_name};
+            """
+            last_ts_df = pd.read_sql(query_last_ts, pg_engine)
+            last_ts = last_ts_df["last_ts"][0]
+        except Exception:
+            last_ts = None
 
-    if pd.isna(last_ts) or last_ts is None:
-        last_ts = datetime(1900, 1, 1)
-        print(f"⚙️ No existing data found for {table_name}, performing initial load.")
+        if pd.isna(last_ts) or last_ts is None:
+            last_ts = datetime(1900, 1, 1)
+            print(f"⚙️ No existing data found for {table_name}, performing initial load.")
+        else:
+            print(f"⚙️ Last ingested timestamp for {table_name}: {last_ts}")
     else:
-        print(f"⚙️ Last ingested timestamp for {table_name}: {last_ts}")
+        last_ts = None  # các bảng khác full load
 
     # ------------------------------
     # 2️⃣ Lấy dữ liệu mới hơn từ MySQL
     # ------------------------------
-    # Nếu bảng có cột Date & Time thì mới làm incremental
     if table_name == "ride_bookings":
         query = f"""
-            SELECT *,
-                   STR_TO_DATE(CONCAT(Date, ' ', Time), '%Y-%m-%d %H:%i:%s') AS datetime_ingested
+            SELECT *
             FROM {table_name}
-            WHERE STR_TO_DATE(CONCAT(Date, ' ', Time), '%Y-%m-%d %H:%i:%s') > '{last_ts}';
+            WHERE event_timestamp > '{last_ts}';
         """
     else:
-        # Các bảng khác tạm thời full load (vì chưa có cột thời gian)
         query = f"SELECT * FROM {table_name};"
 
     df = mysql_hook.get_pandas_df(query)
@@ -72,7 +70,7 @@ def transfer_table(table_name: str):
         return
 
     # ------------------------------
-    # 3️⃣ Làm sạch dữ liệu (chỉ cho bảng ride_bookings)
+    # 3️⃣ Làm sạch dữ liệu (nếu cần)
     # ------------------------------
     if table_name == "ride_bookings":
         df["booking_id"] = df["booking_id"].astype(str).str.replace('"', '', regex=False)
@@ -81,29 +79,45 @@ def transfer_table(table_name: str):
         if "time" in df.columns and np.issubdtype(df["time"].dtype, np.timedelta64):
             df["time"] = df["time"].apply(lambda x: str(x).split()[-1] if pd.notnull(x) else None)
 
-        # Thêm cột load_timestamp để tracking batch
-        df["load_timestamp"] = datetime.now()
-
     # ------------------------------
     # 4️⃣ Append dữ liệu mới vào PostgreSQL
     # ------------------------------
-    if table_name == 'ride_bookings':
-        df.to_sql(
-            name=table_name,
-            con=pg_engine,
-            schema=SCHEMA,
-            if_exists="append",  # append, không replace
-            index=False
-        )
+    if table_name == "ride_bookings":
+        if_exists_mode = "append"
     else:
-        pg_hook.run(f"TRUNCATE TABLE {SCHEMA}.{table_name};")
-        df.to_sql(
-            name=table_name,
-            con=pg_engine,
-            schema=SCHEMA,
-            if_exists="append",
-            index=False
-        )
+        try:
+            pg_hook.run(f"TRUNCATE TABLE {SCHEMA}.{table_name} RESTART IDENTITY;")
+            if_exists_mode = "append"
+        except Exception:
+            if_exists_mode = "replace"
+            
+    df.to_sql(
+        name=table_name,
+        con=pg_engine,
+        schema=SCHEMA,
+        if_exists=if_exists_mode,
+        index=False
+    )
+
+    # ------------------------------
+    # 5️⃣ Tạo index cho event_timestamp trong PostgreSQL (nếu có cột này)
+    # ------------------------------
+    if table_name == "ride_bookings":
+        create_index_sql = f"""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes 
+                    WHERE schemaname = '{SCHEMA}' 
+                    AND tablename = '{table_name}'
+                    AND indexname = '{table_name}_event_timestamp_idx'
+                ) THEN
+                    EXECUTE 'CREATE INDEX {table_name}_event_timestamp_idx 
+                             ON {SCHEMA}.{table_name}(event_timestamp);';
+                END IF;
+            END $$;
+        """
+        pg_hook.run(create_index_sql)
 
     print(f"✅ Successfully ingested {len(df)} new records into {SCHEMA}.{table_name}")
 
@@ -119,7 +133,7 @@ default_args = {
 with DAG(
     dag_id="mysql_to_postgres_bronze_incremental",
     default_args=default_args,
-    schedule_interval=None,  # chỉ chạy khi trigger thủ công
+    schedule_interval=None,
     catchup=False,
     description="Incremental ETL MySQL -> Postgres (Bronze layer)"
 ) as dag:

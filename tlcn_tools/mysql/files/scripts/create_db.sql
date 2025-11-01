@@ -45,6 +45,13 @@ CREATE TABLE IF NOT EXISTS ride_bookings (
     driver_ratings DECIMAL(2,1),
     customer_rating DECIMAL(2,1),
     payment_method VARCHAR(15),
-    PRIMARY KEY (booking_id)
+
+    -- -- 🕒 Thêm cột timestamp sinh tự động, lưu sẵn giá trị ngày + giờ
+    event_timestamp DATETIME GENERATED ALWAYS AS (
+        STR_TO_DATE(CONCAT(date, ' ', time), '%Y-%m-%d %H:%i:%s')
+    ) STORED,
+
+    PRIMARY KEY (booking_id),
+    INDEX idx_event_timestamp (event_timestamp)  -- 🔥 Tạo index để query nhanh hơn
 );
 TRUNCATE TABLE ride_bookings;

@@ -3,6 +3,7 @@
     materialized='incremental',
     incremental_strategy='merge',
     unique_key='status_key',
+    on_schema_change='sync_all_columns',
     schema='gold'
   )
 }}

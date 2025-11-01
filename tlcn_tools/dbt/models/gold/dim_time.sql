@@ -1,24 +1,27 @@
 {{ 
   config(
     materialized='incremental',
-    incremental_strategy='merge',
+    incremental_strategy='append',
     unique_key='time_key',
+    on_schema_change='sync_all_columns',
     schema='gold'
   )
 }}
 
-WITH silver_time AS (
+WITH new_times AS (
     SELECT
-        time_key,
-        time,
-        hour,
-        minute,
-        second,
-        time_of_day
-    FROM {{ ref('time') }}
+        t.time_key,
+        t.time,
+        t.hour,
+        t.minute,
+        t.second,
+        t.time_of_day
+    FROM {{ ref('time') }} t
     {% if is_incremental() %}
-      WHERE time_key NOT IN (SELECT time_key FROM {{ this }})
+      LEFT JOIN {{ this }} g
+        ON t.time_key = g.time_key
+      WHERE g.time_key IS NULL
     {% endif %}
 )
 
-SELECT * FROM silver_time
+SELECT * FROM new_times

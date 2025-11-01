@@ -81,6 +81,9 @@ sources:
                     to: source('bronze', 'payments')
                     field: payment_method
 
+          - name: event_timestamp
+            description: "Timestamp concatenated from 'date' and 'time' columns."
+
       - name: locations
         description: "Raw data of locations synchronized from mysql by airflow."
         columns:

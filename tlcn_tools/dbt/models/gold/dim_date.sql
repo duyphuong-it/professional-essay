@@ -1,24 +1,27 @@
 {{ 
   config(
     materialized='incremental',
-    incremental_strategy='merge',
+    incremental_strategy='append',
     unique_key='date_key',
+    on_schema_change='sync_all_columns',
     schema='gold'
   )
 }}
 
-WITH silver_date AS (
+WITH new_dates AS (
     SELECT
-        date_key,
-        full_date,
-        year,
-        month,
-        day,
-        quarter
-    FROM {{ ref('date') }}
+        d.date_key,
+        d.full_date,
+        d.year,
+        d.month,
+        d.day,
+        d.quarter
+    FROM {{ ref('date') }} d
     {% if is_incremental() %}
-      WHERE date_key NOT IN (SELECT date_key FROM {{ this }})
+      LEFT JOIN {{ this }} g
+        ON d.date_key = g.date_key
+      WHERE g.date_key IS NULL
     {% endif %}
 )
 
-SELECT * FROM silver_date
+SELECT * FROM new_dates

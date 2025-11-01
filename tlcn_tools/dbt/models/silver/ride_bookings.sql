@@ -1,10 +1,10 @@
-{{ 
+{{
   config(
-    materialized='incremental',
-    unique_key='booking_id',
-    incremental_strategy='merge',
-    schema='silver'
-  ) 
+    materialized = 'incremental',
+    unique_key = 'booking_id',
+    incremental_strategy = 'merge',
+    schema = 'silver'
+  )
 }}
 
 SELECT
@@ -29,11 +29,10 @@ SELECT
     driver_ratings AS driver_rating,
     customer_rating,
     payment_method,
-    encode(DIGEST(booking_id, 'sha256'), 'hex') AS booking_key
+    event_timestamp,
+    encode(digest(booking_id, 'sha256'), 'hex') AS booking_key
 FROM {{ source('bronze', 'ride_bookings') }}
 
--- Chỉ load incremental nếu không full refresh
 {% if is_incremental() %}
-WHERE
-  booking_id NOT IN (SELECT booking_id FROM {{ this }})
+WHERE event_timestamp > (SELECT COALESCE(MAX(event_timestamp), '1900-01-01') FROM {{ this }})
 {% endif %}
