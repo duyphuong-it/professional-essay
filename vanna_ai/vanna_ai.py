@@ -4,11 +4,12 @@ from vanna.chromadb import ChromaDB_VectorStore
 # Custom Vanna class cho local (ChromaDB + Ollama)
 class MyVanna(ChromaDB_VectorStore, Ollama):
     def __init__(self, config=None):
+        self.config = config or {}
         ChromaDB_VectorStore.__init__(self, config=config)
         Ollama.__init__(self, config=config)
 
 # Khởi tạo Vanna với Ollama model
-vn = MyVanna(config={'model': 'mistral'})
+vn = MyVanna(config={'model': 'mistral', 'allow_llm_to_see_data': True, 'allow_llm_to_see_schema': True})
 
 # Kết nối PostgreSQL Warehouse
 try:
