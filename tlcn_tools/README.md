@@ -1,23 +1,11 @@
 ## Tổng quan hệ thống
 
-...
-
 - **MySQL**: Nguồn dữ liệu
 - **Airflow**: Điều phối cho các pipeline ETL (nếu cần).
 - **Postgres**: Kho dữ liệu
 - **DBT**: công cụ xử lý, biến đổi dữ liệu
 
 Tất cả các thành phần đều được cấu hình để giao tiếp qua mạng Docker `tlcn-net`.
-
----
-
-## Kiến trúc luồng dữ liệu ETL
-
-1. **Data Source**: Dữ liệu gốc (có thể là file, database, API, v.v.).
-2. **ETL với DBT và Airflow**:
-   - ...
-3. **Power BI**:
-   - ...
 
 ---
 
@@ -64,7 +52,6 @@ Lưu ý: Mỗi lần chạy lệnh sẽ được hỏi mật khẩu, nhập `roo
    Tại giao diện chính của Airflow, chọn `Admin` > `Connections`.
 
    Tại giao diện `Connections`, nhấn nút `+` để thêm connection cho MySQL, điền các thông tin như sau:
-
    - Connection Id: `mysql_default`
    - Connection Type: `MySQL`
    - Host: `mysql`
@@ -75,7 +62,6 @@ Lưu ý: Mỗi lần chạy lệnh sẽ được hỏi mật khẩu, nhập `roo
    - Để trống các thông tin còn lại và chọn `Save`
 
    Sau khi trở về giao diện `Connections`, tiếp tục nhấn `+` để thêm connection cho PostgreSQL, điền các thông tin như sau:
-
    - Connection Id: `postgres_default`
    - Connection Type: `Postgres`
    - Host: `postgres`
@@ -213,10 +199,6 @@ dbt docs serve --host 0.0.0.0
 ```
 
 **Truy cập DBT UI**: [http://localhost:8090](http://localhost:8090)
-
-## Trực quan hóa dữ liệu với Power BI
-
-- ...
 
 ---
 
